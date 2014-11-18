@@ -8,9 +8,14 @@
  * @author  <a href="mailto:abdiel.aviles@mozartanalytics.com">Abdiel Aviles</a>
  */
 
-@Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
 
-import java.util.Map.Entry
+import groovy.json.JsonParserType
+import groovy.json.JsonSlurper
+import groovyx.net.http.HttpResponseException
+import groovyx.net.http.RESTClient
+
+@Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
+@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7')
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
@@ -21,6 +26,7 @@ import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import net.sf.json.JSON
 
 /**
  * AWS SQS Configs
@@ -32,6 +38,8 @@ def awsCreds = new BasicAWSCredentials(awsAccessKey as String, awsSecretKey as S
 def REGION_NAME = System.getenv("AWS_REGION_NAME") ?: "us-east-1"
 def TARGET_QUEUE = System.getenv("SQS_TARGET_QUEUE") ?: "yourSqsQueueName"
 def MAX_NUMBER_OF_MESSAGES_PER_REQUEST = System.getenv("MAX_NUMBER_OF_MESSAGES") as Integer ?: 10
+
+def LOCAL_ENDPOINT = System.getenv("LOCAL_ENDPOINT") ?: "/"
 
 def sqs = new AmazonSQSClient(awsCreds)
 sqs.setRegion(Region.getRegion(Regions.fromName(REGION_NAME as String)))
@@ -55,32 +63,38 @@ try {
         if(messages.size() <= 0) break
 
         for (Message message : messages) {
-            if(_handleMessage(message)) {
+            if(_handleMessage(LOCAL_ENDPOINT, message)) {
                 // If successful, delete the message
                 println("Deleting Message")
                 String messageReceiptHandle = message.getReceiptHandle()
                 sqs.deleteMessage(new DeleteMessageRequest(targetQueue, messageReceiptHandle))
             }
-            // Else - just forget about it. The queue will handle it.
+            else // TODO we can validate that the long polling timeout is considerably longer than the visibility timeout, if true then we can skip the exception
+                throw new Exception("Local Service Failure") // We should stop consuming here
         }
     }
-
 }
 catch (AmazonServiceException ase) { ase.printStackTrace() }
 catch (AmazonClientException ace) { ace.printStackTrace() }
 
-def _handleMessage(Message message){
-    // TODO implement local POST
-    println("  Message")
-    println("    MessageId:     " + message.getMessageId())
-    println("    ReceiptHandle: " + message.getReceiptHandle())
-    println("    MD5OfBody:     " + message.getMD5OfBody())
-    println("    Body:          " + message.getBody())
-    for (Entry<String, String> entry : message.getAttributes().entrySet()) {
-        println("  Attribute")
-        println("    Name:  " + entry.getKey())
-        println("    Value: " + entry.getValue())
-    }
+def _handleMessage(String endpoint, Message message){
+    def localhost = System.getenv("LOCAL_HOST") ?: "http://127.0.0.1"
+    def slurper = new JsonSlurper().setType(JsonParserType.LAX)
+    def payload = slurper.parseText(message.getBody())
 
-    return true
+    int status
+    try {
+        def resp = new RESTClient().post(
+                uri: localhost,
+                path : endpoint,
+                body : payload,
+                contentType : System.getenv("MESSAGE_TYPE") ?: "application/json"
+        )
+        status = resp.status
+    }
+    catch(HttpResponseException ex ) { status = ex.response.status }
+
+    println "POST " + localhost + endpoint + " :: " + status
+
+    status < 400
 }
