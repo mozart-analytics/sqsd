@@ -23,25 +23,19 @@ import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 
 /**
- * AWS Configs
+ * AWS SQS Configs
  */
-def awsAccessKey = "yourKeyHere"
-def awsSecretKey = "yourSecretHere"
+def awsAccessKey = System.getenv("AWS_ACCESS_KEY_ID") ?: "yourKeyHere"
+def awsSecretKey = System.getenv("AWS_SECRET_KEY") ?: "yourSecretHere"
+def awsCreds = new BasicAWSCredentials(awsAccessKey as String, awsSecretKey as String)
 
-/**
- * AWS Stuff
- */
-def awsCreds = new BasicAWSCredentials(awsAccessKey, awsSecretKey)
+def REGION_NAME = System.getenv("AWS_REGION_NAME") ?: "us-east-1"
+def TARGET_QUEUE = System.getenv("SQS_TARGET_QUEUE") ?: "yourSqsQueueName"
+def MAX_NUMBER_OF_MESSAGES_PER_REQUEST = System.getenv("MAX_NUMBER_OF_MESSAGES") as Integer ?: 10
 
-/**
- * SQS Configs
- */
-def TARGET_QUEUE = "sqs-daemon-test"
-def MAX_NUMBER_OF_MESSAGES_PER_REQUEST = 10
-def MAX_WAIT_TIME_SECONDS = 10
 def sqs = new AmazonSQSClient(awsCreds)
-sqs.setRegion(Region.getRegion(Regions.US_EAST_1))
-def targetQueue = sqs.getQueueUrl(TARGET_QUEUE).getQueueUrl()
+sqs.setRegion(Region.getRegion(Regions.fromName(REGION_NAME as String)))
+def targetQueue = sqs.getQueueUrl(TARGET_QUEUE as String).getQueueUrl()
 
 try {
 
@@ -51,8 +45,6 @@ try {
     // Configure request
     def receiveMessageRequest = new ReceiveMessageRequest(targetQueue)
     receiveMessageRequest.setMaxNumberOfMessages(MAX_NUMBER_OF_MESSAGES_PER_REQUEST)
-    if(MAX_WAIT_TIME_SECONDS)
-        receiveMessageRequest.setWaitTimeSeconds(MAX_WAIT_TIME_SECONDS)
 
     // Consume queue until empty
     while(true){
