@@ -38,7 +38,7 @@ int MAX_NUMBER_OF_MESSAGES_PER_REQUEST = System.getenv("MAX_NUMBER_OF_MESSAGES")
 /**
  * HTTP service related configuration env-vars
  */
-String HTTP_HOST = System.getenv("HTTP_HOST") ?: "http://127.0.0.1:10000"
+String HTTP_HOST = System.getenv("HTTP_HOST") ?: "http://127.0.0.1"
 String HTTP_PATH = System.getenv("HTTP_PATH") ?: "/comments-db-service/comments.json"
 String HTTP_REQUEST_CONTENT_TYPE = System.getenv("HTTP_REQUEST_CONTENT_TYPE") ?: "application/json"
 
