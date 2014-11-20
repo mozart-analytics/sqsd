@@ -8,12 +8,6 @@
  * @author  <a href="mailto:abdiel.aviles@mozartanalytics.com">Abdiel Aviles</a>
  */
 
-
-import groovy.json.JsonParserType
-import groovy.json.JsonSlurper
-import groovyx.net.http.HttpResponseException
-import groovyx.net.http.RESTClient
-
 @Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
 @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7')
 
@@ -26,6 +20,10 @@ import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import groovy.json.JsonParserType
+import groovy.json.JsonSlurper
+import groovyx.net.http.HttpResponseException
+import groovyx.net.http.RESTClient
 
 /**
  * AWS SQS Configs
@@ -68,8 +66,8 @@ try {
                 String messageReceiptHandle = message.getReceiptHandle()
                 sqs.deleteMessage(new DeleteMessageRequest(targetQueue, messageReceiptHandle))
             }
-            else // TODO we can validate that the long polling timeout is considerably longer than the visibility timeout, if true then we can skip the exception
-                throw new Exception("Local Service Failure") // We should stop consuming here
+            else // TODO we might validate that the long polling timeout is considerably longer than the visibility timeout, if true then we could skip the exception. Still this is a dangerous alternative.
+                throw new Exception("Local Service Failure. Message ID : " + message.getMessageId()) // We should stop consuming here
         }
     }
 }
@@ -90,7 +88,14 @@ def handleMessage(String endpoint, Message message){
         )
         status = resp.status
     }
-    catch(HttpResponseException ex ) { status = ex.response.status }
+    catch(HttpResponseException ex ) {
+        status = ex.response.status
+        ex.printStackTrace()
+    }
+    catch(ConnectException ex) {
+        status = 500
+        ex.printStackTrace()
+    }
 
     println "POST " + localhost + endpoint + " :: " + status
 
