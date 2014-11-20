@@ -10,11 +10,6 @@
 
 @Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
 @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.2')
-
-import groovy.json.JsonParserType
-import groovy.json.JsonSlurper
-import groovyx.net.http.HttpResponseException
-import groovyx.net.http.RESTClient
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.BasicAWSCredentials
@@ -24,13 +19,17 @@ import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import groovy.json.JsonParserType
+import groovy.json.JsonSlurper
+import groovyx.net.http.HttpResponseException
+import groovyx.net.http.RESTClient
 
 // TODO: Use Groovy's ConfigSlurper to enable configuration using properties file or env vars.
 /**
  * AWS SQS  related configuration env-vars
  */
 String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID")
-String AWS_SECRET_kEY = System.getenv("AWS_SECRET_KEY")
+String AWS_SECRET_KEY = System.getenv("AWS_SECRET_KEY")
 String REGION_NAME = System.getenv("AWS_REGION_NAME") ?: "us-east-1"
 String SQS_QUEUE_NAME = System.getenv("SQS_QUEUE_NAME")
 String SQS_QUEUE_URL = System.getenv("SQS_QUEUE_URL")
@@ -47,7 +46,7 @@ String HTTP_REQUEST_CONTENT_TYPE = System.getenv("HTTP_REQUEST_CONTENT_TYPE") ?:
 // TODO: Print properties.
 
 // Setup sqs client.
-def awsCreds = new BasicAWSCredentials(AWS_ACCESS_KEY_ID as String, AWS_SECRET_kEY as String)
+def awsCreds = new BasicAWSCredentials(AWS_ACCESS_KEY_ID as String, AWS_SECRET_KEY as String)
 def sqs = new AmazonSQSClient(awsCreds)
 def sqsRegion = Region.getRegion(Regions.fromName(REGION_NAME as String))
 sqs.setRegion(sqsRegion)
@@ -78,8 +77,8 @@ try {
                 String messageReceiptHandle = message.getReceiptHandle()
                 sqs.deleteMessage(new DeleteMessageRequest(sqsQueueUrl, messageReceiptHandle))
             }
-            else // TODO we can validate that the long polling timeout is considerably longer than the visibility timeout, if true then we can skip the exception
-                throw new Exception("Local Service Failure") // We should stop consuming here
+            else // TODO we might validate that the long polling timeout is considerably longer than the visibility timeout, if true then we could skip the exception. Still this is a dangerous alternative.
+                throw new Exception("Local Service Failure. Message ID : " + message.getMessageId()) // We should stop consuming here
         }
 
         println "Done!!"
@@ -101,7 +100,14 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
         )
         status = resp.status
     }
-    catch(HttpResponseException ex ) { status = ex.response.status }
+    catch(HttpResponseException ex ) {
+        status = ex.response.status
+        ex.printStackTrace()
+    }
+    catch(ConnectException ex) {
+        status = 500
+        ex.printStackTrace()
+    }
 
     println "POST " + httpHost + httpPath + " :: " + status // TODO: Find out the correct way of displaying this message.
 
