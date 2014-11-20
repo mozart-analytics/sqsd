@@ -26,7 +26,6 @@ import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
-import net.sf.json.JSON
 
 /**
  * AWS SQS Configs
@@ -63,7 +62,7 @@ try {
         if(messages.size() <= 0) break
 
         for (Message message : messages) {
-            if(_handleMessage(LOCAL_ENDPOINT, message)) {
+            if(handleMessage(LOCAL_ENDPOINT, message)) {
                 // If successful, delete the message
                 println("Deleting Message")
                 String messageReceiptHandle = message.getReceiptHandle()
@@ -77,7 +76,7 @@ try {
 catch (AmazonServiceException ase) { ase.printStackTrace() }
 catch (AmazonClientException ace) { ace.printStackTrace() }
 
-def _handleMessage(String endpoint, Message message){
+def handleMessage(String endpoint, Message message){
     def localhost = System.getenv("LOCAL_HOST") ?: "http://127.0.0.1"
     def slurper = new JsonSlurper().setType(JsonParserType.LAX)
     def payload = slurper.parseText(message.getBody())
