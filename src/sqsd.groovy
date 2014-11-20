@@ -84,11 +84,10 @@ def _handleMessage(String endpoint, Message message){
 
     int status
     try {
-        def resp = new RESTClient().post(
-                uri: localhost,
+        def resp = new RESTClient(localhost).post(
                 path : endpoint,
                 body : payload,
-                contentType : System.getenv("MESSAGE_TYPE") ?: "application/json"
+                contentType : System.getenv("MIME_TYPE") ?: "application/json"
         )
         status = resp.status
     }
