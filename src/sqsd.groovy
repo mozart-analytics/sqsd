@@ -13,6 +13,7 @@
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.AmazonSQSClient
@@ -24,54 +25,57 @@ import groovy.json.JsonSlurper
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 
-// TODO: Use Groovy's ConfigSlurper to enable configuration using properties file or env vars.
-/**
- * AWS SQS  related configuration env-vars
- */
-String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID")
-String AWS_SECRET_KEY = System.getenv("AWS_SECRET_KEY")
-String REGION_NAME = System.getenv("AWS_REGION_NAME") ?: "us-east-1"
-String SQS_QUEUE_NAME = System.getenv("SQS_QUEUE_NAME")
-String SQS_QUEUE_URL = System.getenv("SQS_QUEUE_URL")
-int MAX_NUMBER_OF_MESSAGES_PER_REQUEST = System.getenv("MAX_NUMBER_OF_MESSAGES") as Integer ?: 10
+String DEFAULT_CONFIG_FILE_LOCATION = "config/sqsd-default-config.groovy"
 
-/**
- * HTTP service related configuration env-vars
- */
-String HTTP_HOST = System.getenv("HTTP_HOST") ?: "http://127.0.0.1"
-String HTTP_PATH = System.getenv("HTTP_PATH") ?: "/comments-db-service/comments.json"
-String HTTP_REQUEST_CONTENT_TYPE = System.getenv("HTTP_REQUEST_CONTENT_TYPE") ?: "application/json"
+// Retrieve configuration values from environment -> default-config -> config.
+def config = new ConfigSlurper().parse(new File(DEFAULT_CONFIG_FILE_LOCATION).toURI().toURL())
+File customConfigFile = new File(config.sqsd.config_file as String)
 
-// TODO: Assertions of required variables without defaults.
-// TODO: Print properties.
+// Merge default-config with provided config.
+if (customConfigFile.exists()) {
+    def customConfig = new ConfigSlurper().parse(customConfigFile.toURI().toURL())
+    config = config.merge(customConfig)
+}
+
+// Assert that all required properties are provided.
+assert config.aws.access_key_id != null, "Required `aws.access_key_id` property not provided!!"
+assert config.aws.secret_access_key != null, "Required `aws.secret_access_key` property not provided!!"
+assert config.sqsd.queue.url != null, "Required `sqsd.queue.url` property not provided!!"
+assert config.sqsd.http.host != null, "Required `sqsd.http.host` property not provided!!"
+assert config.sqsd.http.path != null, "Required `sqsd.http.path` property not provided!!"
 
 // Setup sqs client.
-def awsCreds = new BasicAWSCredentials(AWS_ACCESS_KEY_ID as String, AWS_SECRET_KEY as String)
+def awsCreds = new BasicAWSCredentials(config.aws.access_key_id as String, config.aws.secret_access_key as String) // TODO: Determine if this is the correct approach when using Docker.
 def sqs = new AmazonSQSClient(awsCreds)
-def sqsRegion = Region.getRegion(Regions.fromName(REGION_NAME as String))
+def sqsRegion = Region.getRegion(Regions.fromName(config.sqsd.queue.region_name as String))
 sqs.setRegion(sqsRegion)
-String sqsQueueUrl = SQS_QUEUE_URL ?: sqs.getQueueUrl(SQS_QUEUE_NAME as String).getQueueUrl() // Use provided queue url or name (url has priority)
+String sqsQueueUrl = config.sqsd.queue.url ?: sqs.getQueueUrl(config.sqsd.queue.name as String).getQueueUrl() // Use provided queue url or name (url has priority)
 
 try {
     println("Receiving messages from " + sqsQueueUrl)
-    println("Max Number of Messages : " + MAX_NUMBER_OF_MESSAGES_PER_REQUEST)
 
     // Configure sqs request
     def receiveMessageRequest = new ReceiveMessageRequest()
             .withQueueUrl(sqsQueueUrl)
-            .withMaxNumberOfMessages(MAX_NUMBER_OF_MESSAGES_PER_REQUEST)
-            .withWaitTimeSeconds(20) // TODO: Is this necessary?
+            .withMaxNumberOfMessages(config.sqsd.max_messages_per_request as Integer)
+            .withWaitTimeSeconds(config.sqsd.wait_time_seconds as Integer) // Sets long-polling wait time seconds (long-polling has to be enabled on related SQS)
 
     // Consume queue until empty
-    while(true){
+    while(true){ // TODO: Limit the amount of messages to process using a property.
+        println "Querying SQS for messages ..."
         def messages = sqs.receiveMessage(receiveMessageRequest).getMessages()
-        println "Total Received Messages : " + messages.size()
+        println "Received Messages : " + messages.size()
 
         // Break when empty
         if(messages.size() <= 0) break
 
-        for (Message message : messages) {
-            if(handleMessage(HTTP_HOST, HTTP_PATH, HTTP_REQUEST_CONTENT_TYPE, message)) {
+        for (Message message : messages) { // TODO: Make async.
+            if(handleMessage(
+                    config.sqsd.http.host as String,
+                    config.sqsd.http.path as String,
+                    config.sqsd.http.request.content_type as String,
+                    message)
+            ) {
                 // If successful, delete the message
                 println("Deleting message...")
                 String messageReceiptHandle = message.getReceiptHandle()
@@ -86,6 +90,8 @@ try {
 }
 catch (AmazonServiceException ase) { ase.printStackTrace() } // TODO: Research how to add log4j or something similar.
 catch (AmazonClientException ace) { ace.printStackTrace() }
+
+println "SQSD finished successfully!"
 
 def handleMessage(String httpHost, String httpPath, String contentType, Message message){
     def slurper = new JsonSlurper().setType(JsonParserType.LAX)
@@ -109,7 +115,7 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
         ex.printStackTrace()
     }
 
-    println "POST " + httpHost + httpPath + " :: " + status // TODO: Find out the correct way of displaying this message.
+    println "POST " + httpHost + httpPath + " :: " + status
 
     status < 400
 }
