@@ -40,7 +40,7 @@ if (customConfigFile.exists()) {
 // Assert that all required properties are provided.
 assert config.aws.access_key_id != null, "Required `aws.access_key_id` property not provided!!"
 assert config.aws.secret_access_key != null, "Required `aws.secret_access_key` property not provided!!"
-assert config.sqsd.queue.url != null, "Required `sqsd.queue.url` property not provided!!"
+assert config.sqsd.queue.url != null || config.sqsd.queue.name != null, "Required `sqsd.queue.url` OR `sqsd.queue.name` property not provided!!"
 assert config.sqsd.http.host != null, "Required `sqsd.http.host` property not provided!!"
 assert config.sqsd.http.path != null, "Required `sqsd.http.path` property not provided!!"
 
