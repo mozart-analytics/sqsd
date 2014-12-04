@@ -64,3 +64,5 @@ TBD
 #### Using Docker (with linked container service) 
 TBD
 
+## Versions
+ - 0.1.0 (current)

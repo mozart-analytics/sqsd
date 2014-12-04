@@ -26,6 +26,7 @@ import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 
 String DEFAULT_CONFIG_FILE_LOCATION = "config/sqsd-default-config.groovy"
+String SQSD_VERSION = "0.1.0"
 
 // Retrieve configuration values from environment -> default-config -> config.
 def config = new ConfigSlurper().parse(new File(DEFAULT_CONFIG_FILE_LOCATION).toURI().toURL())
