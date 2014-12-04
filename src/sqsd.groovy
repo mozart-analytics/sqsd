@@ -1,6 +1,6 @@
 /**
  * <h1>SQSD</h1>
- * sqsd : A simple alternative to the Amazon SQS Daemon "sqsd".
+ * sqsd : A simple alternative to the Amazon SQS Daemon ("sqsd") used on AWS Beanstalk worker tier instances.
  * <p>
  * Copyright (c) 2014 Mozart Analytics
  *
@@ -88,7 +88,7 @@ try {
         println "Done!!"
     }
 }
-catch (AmazonServiceException ase) { ase.printStackTrace() } // TODO: Research how to add log4j or something similar.
+catch (AmazonServiceException ase) { ase.printStackTrace() } // TODO: Add log4j or something similar.
 catch (AmazonClientException ace) { ace.printStackTrace() }
 
 println "SQSD finished successfully!"
