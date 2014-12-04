@@ -1,4 +1,4 @@
-FROM webratio/gvm:2.3.7
+FROM webratio/groovy:2.3.8
 MAINTAINER Manuel Ortiz Bey <ortiz.manuel@mozartanalytics.com>
 
 # Create sqsd directory

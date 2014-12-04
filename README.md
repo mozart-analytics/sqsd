@@ -19,7 +19,7 @@ But even more important! **We have "dockerized" it** so that you can use it as a
 Following are detailed instructions of configuration and usage with and without Docker. Any changes, suggestions or Forks are welcome!
 
 ## Technologies / Environments Used 
-- Groovy 2.3.7 
+- Groovy 2.3.7+ 
 - Java JDK 7+ 
 - AWS Java SDK 1.9.6
 
@@ -48,7 +48,7 @@ Environment Variables and defaults are loaded from `config/sqsd-default-config.g
 ### Running / Executing  
 
 #### Using Groovy CLI 
-This script has been tested with `Groovy 2.3.7`:
+This script has been tested with `Groovy 2.3.7+`:
 
     groovy sqsd.groovy
 
