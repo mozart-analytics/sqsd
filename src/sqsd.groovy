@@ -10,6 +10,7 @@
 
 @Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
 @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.2')
+
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.BasicAWSCredentials
@@ -26,7 +27,7 @@ import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 
 String DEFAULT_CONFIG_FILE_LOCATION = "config/sqsd-default-config.groovy"
-String SQSD_VERSION = "0.1.0"
+String SQSD_VERSION = "1.0.0"
 
 // Retrieve configuration values from environment -> default-config -> config.
 def config = new ConfigSlurper().parse(new File(DEFAULT_CONFIG_FILE_LOCATION).toURI().toURL())

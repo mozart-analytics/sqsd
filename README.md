@@ -34,16 +34,18 @@ Custom properties are loaded from `config/sqsd-config.groovy`.
 #### Using Environment Variables 
 Environment Variables and defaults are loaded from `config/sqsd-default-config.groovy`.
 
-- `AWS_ACCESS_KEY_ID` - Your AWS Access Key (**required**)
-- `AWS_SECRET_ACCESS_KEY` - Your AWS secret access secret (**required**)
-- `SQS_QUEUE_REGION_NAME` - The region name of the AWS SQS queue (default: `us-east-1`)
-- `SQSD_QUEUE_URL` - Your queue URL. You can instead use the queue name but this takes precedence over queue name. (**optional/required**)
-- `SQSD_QUEUE_NAME` - Your queue name (**optional/required**)
-- `SQSD_MAX_MESSAGES_PER_REQUEST` - Max number of messages to retrieve per request (max: `10`, default: `10`)
-- `SQSD_WAIT_TIME_SECONDS` - Long polling wait time when querying the queue (max: `20`, default: `20`)
-- `SQSD_HTTP_HOST` - Host address to your service (default: `http://127.0.0.1`)
-- `SQSD_HTTP_PATH` - Your service endpoint/path where to POST the messages (default: `/`)
-- `SQSD_HTTP_REQUEST_CONTENT_TYPE` - Message MIME Type (default: `application/json`)
+| **Property**                            | **Default**        | **Required**                       | **Description**                                                                               |
+|-----------------------------------------|--------------------|------------------------------------|-----------------------------------------------------------------------------------------------|
+| `AWS_ACCESS_KEY_ID`                     | -                  | yes                                | Your AWS Access Key.                                                                          |
+| `AWS_SECRET_ACCESS_KEY`                 | -                  | yes                                | Your AWS secret access secret.                                                                |
+| `SQS_QUEUE_REGION_NAME`                 | `us-east-1`        | no                                 | The region name of the AWS SQS queue                                                          |
+| `SQSD_QUEUE_URL`                        | -                  | if `SQSD_QUEUE_NAME` not specified | Your queue URL. You can instead use the queue name but this takes precedence over queue name. |
+| `SQSD_QUEUE_NAME`                       | -                  | if `SQSD_QUEUE_URL` not specified  | Your queue name.                                                                              |
+| `SQSD_MAX_MESSAGES_PER_REQUEST`         | `10` (max: `10`)   | no                                 | Max number of messages to retrieve per request.                                               |
+| `SQSD_WAIT_TIME_SECONDS`                | `20` (max: `20`)   | no                                 | Long polling wait time when querying the queue.                                               |
+| `SQSD_WORKER_HTTP_HOST`                 | `http://127.0.0.1` | yes                                | Host address to your service.                                                                 |
+| `SQSD_WORKER_HTTP_PATH`                 | `/`                | yes                                | Your service endpoint/path where to POST the messages.                                        |
+| `SQSD_WORKER_HTTP_REQUEST_CONTENT_TYPE` | `application/json` | yes                                | Message MIME Type.                                                                            |
 
 ### Running / Executing  
 
@@ -52,17 +54,16 @@ This script has been tested with `Groovy 2.3.7+`:
 
     groovy sqsd.groovy
 
-#### Using Docker (with localhost service)  
+**Remember to specify the required properties using either environment variables or by editing the `config/sqsd-config.groovy`!*
 
-    cd /your/sqsd/local/path
+#### Using Docker (with service/worker hosted outside this container)
+Use this run configuration when your worker is running in another container or in a remote server. 
+ 
+	cd /your/sqsd/local/path
 	docker build -t someImageName .
-	docker run someImageName
+	docker run -e SQSD_WORKER_HTTP_HOST=http://someRemoteHost -e SQSD_WORKER_HTTP_PATH=someRemotePath someImageName
 
-#### Using Docker (with remote service) 
-TBD
-
-#### Using Docker (with linked container service) 
-TBD
+**Remember that if you are running your worker on your Docker host's instance, you cannot use `localhost` as the worker host path since the `localhost` in this case will be the container's address, not your host's.*
 
 ## Versions
- - 0.1.0 (current)
+ - 1.0.0 (current)
