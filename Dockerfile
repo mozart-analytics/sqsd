@@ -12,4 +12,5 @@ COPY ./config /sqsd/config
 
 # Run sqsd
 WORKDIR /sqsd
-CMD ["groovy sqsd"]
+ENTRYPOINT ["groovy"]
+COMMAND ["sqsd"]
