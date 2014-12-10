@@ -21,9 +21,9 @@ sqsd.wait_time_seconds = System.getenv("SQSD_WAIT_TIME_SECONDS") as Integer ?: 2
 /**
  * HTTP service related configuration env-vars
  */
-sqsd.http.host = System.getenv("SQSD_HTTP_HOST") ?: "http://127.0.0.1"
-sqsd.http.path = System.getenv("SQSD_HTTP_PATH") ?: "/"
-sqsd.http.request.content_type = System.getenv("SQSD_HTTP_REQUEST_CONTENT_TYPE") ?: "application/json"
+sqsd.worker.http.host = System.getenv("SQSD_WORKER_HTTP_HOST") ?: "http://127.0.0.1"
+sqsd.worker.http.path = System.getenv("SQSD_WORKER_HTTP_PATH") ?: "/"
+sqsd.worker.http.request.content_type = System.getenv("SQSD_WORKER_HTTP_REQUEST_CONTENT_TYPE") ?: "application/json"
 
 /**
  * Misc configuration env-vars

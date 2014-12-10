@@ -43,8 +43,8 @@ if (customConfigFile.exists()) {
 assert config.aws.access_key_id != null, "Required `aws.access_key_id` property not provided!!"
 assert config.aws.secret_access_key != null, "Required `aws.secret_access_key` property not provided!!"
 assert config.sqsd.queue.url != null || config.sqsd.queue.name != null, "Required `sqsd.queue.url` OR `sqsd.queue.name` property not provided!!"
-assert config.sqsd.http.host != null, "Required `sqsd.http.host` property not provided!!"
-assert config.sqsd.http.path != null, "Required `sqsd.http.path` property not provided!!"
+assert config.sqsd.worker.http.host != null, "Required `sqsd.worker.http.host` property not provided!!"
+assert config.sqsd.worker.http.path != null, "Required `sqsd.worker.http.path` property not provided!!"
 
 // Setup sqs client.
 def awsCreds = new BasicAWSCredentials(config.aws.access_key_id as String, config.aws.secret_access_key as String) // TODO: Determine if this is the correct approach when using Docker.
@@ -73,9 +73,9 @@ try {
 
         for (Message message : messages) { // TODO: Make async.
             if(handleMessage(
-                    config.sqsd.http.host as String,
-                    config.sqsd.http.path as String,
-                    config.sqsd.http.request.content_type as String,
+                    config.sqsd.worker.http.host as String,
+                    config.sqsd.worker.http.path as String,
+                    config.sqsd.worker.http.request.content_type as String,
                     message)
             ) {
                 // If successful, delete the message
