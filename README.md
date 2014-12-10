@@ -66,4 +66,4 @@ Use this run configuration when your worker is running in another container or i
 **Remember that if you are running your worker on your Docker host's instance, you cannot use `localhost` as the worker host path since the `localhost` in this case will be the container's address, not your host's.*
 
 ## Versions
- - 1.0.0 (current)
+ - 1.1.0 (current)
