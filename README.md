@@ -56,6 +56,8 @@ This script has been tested with `Groovy 2.3.7+`:
 
 **Remember to specify the required properties using either environment variables or by editing the `config/sqsd-config.groovy`!*
 
+**On the first run, the script will download some dependencies so it may hang for a while, just be patient!*
+
 #### Using Docker (with service/worker hosted outside this container)
 Use this run configuration when your worker is running in another container or in a remote server. 
  
