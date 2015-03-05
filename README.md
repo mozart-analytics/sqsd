@@ -42,6 +42,8 @@ Environment Variables and defaults are loaded from `config/sqsd-default-config.g
 | `SQSD_QUEUE_URL`                        | -                  | if `SQSD_QUEUE_NAME` not specified | Your queue URL. You can instead use the queue name but this takes precedence over queue name. |
 | `SQSD_QUEUE_NAME`                       | -                  | if `SQSD_QUEUE_URL` not specified  | Your queue name.                                                                              |
 | `SQSD_MAX_MESSAGES_PER_REQUEST`         | `10` (max: `10`)   | no                                 | Max number of messages to retrieve per request.                                               |
+| `SQSD_RUN_DAEMONIZED`                   | `0`                | no                                 | Whether to continue running with empty queue (0 is no, 1 is yes)
+| `SQSD_SLEEP_SECONDS`                    | `0`                | no                                 | Number of seconds to wait after polling empty queue when daemonized
 | `SQSD_WAIT_TIME_SECONDS`                | `20` (max: `20`)   | no                                 | Long polling wait time when querying the queue.                                               |
 | `SQSD_WORKER_HTTP_HOST`                 | `http://127.0.0.1` | yes                                | Host address to your service.                                                                 |
 | `SQSD_WORKER_HTTP_PATH`                 | `/`                | yes                                | Your service endpoint/path where to POST the messages.                                        |
