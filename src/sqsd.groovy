@@ -119,5 +119,5 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
 
     println "POST " + httpHost + httpPath + " :: " + status
 
-    status < 400
+    status == 200
 }
