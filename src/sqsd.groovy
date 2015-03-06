@@ -61,6 +61,7 @@ try {
             .withQueueUrl(sqsQueueUrl)
             .withMaxNumberOfMessages(config.sqsd.max_messages_per_request as Integer)
             .withWaitTimeSeconds(config.sqsd.wait_time_seconds as Integer) // Sets long-polling wait time seconds (long-polling has to be enabled on related SQS)
+            .withAttributeNames('All')
 
     // Consume queue until empty
     while(true){ // TODO: Limit the amount of messages to process using a property.
@@ -104,7 +105,14 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
         def resp = new RESTClient(httpHost).post(
                 path : httpPath,
                 body : payload,
-                contentType : contentType
+                contentType : contentType,
+                headers: [
+                    "User-Agent": "aws-sqsd/1.1",
+                    "X-Aws-Sqsd-Msgid": message.getMessageId(),
+                    "X-Aws-Sqsd-Queue": "",
+                    "X-Aws-Sqsd-First-Received-At": message.attributes.ApproximateFirstReceiveTimestamp,
+                    "X-Aws-Sqsd-Receive-Count": message.attributes.ApproximateReceiveCount
+                ]
         )
         status = resp.status
     }
