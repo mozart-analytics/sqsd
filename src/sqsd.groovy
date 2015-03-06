@@ -111,7 +111,8 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
                     "X-Aws-Sqsd-Msgid": message.getMessageId(),
                     "X-Aws-Sqsd-Queue": "",
                     "X-Aws-Sqsd-First-Received-At": message.attributes.ApproximateFirstReceiveTimestamp,
-                    "X-Aws-Sqsd-Receive-Count": message.attributes.ApproximateReceiveCount
+                    "X-Aws-Sqsd-Receive-Count": message.attributes.ApproximateReceiveCount,
+                    "X-Aws-Sqsd-Sender-Id": message.attributes.SenderId
                 ]
         )
         status = resp.status
