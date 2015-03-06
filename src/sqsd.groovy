@@ -68,8 +68,11 @@ try {
         def messages = sqs.receiveMessage(receiveMessageRequest).getMessages()
         println "Received Messages : " + messages.size()
 
-        // Break when empty
-        if(messages.size() <= 0) break
+        // Break when empty if not running daemonized
+        if(messages.size() <= 0) {
+            if (config.sqsd.run_daemonized < 1) break
+            else if(config.sqsd.sleep_seconds) sleep(config.sqsd.sleep_seconds * 1000) // don't want to hammer implementations that don't implement long-polling
+        }
 
         for (Message message : messages) { // TODO: Make async.
             if(handleMessage(
