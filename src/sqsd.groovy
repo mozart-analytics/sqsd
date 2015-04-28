@@ -1,3 +1,4 @@
+#!/usr/bin/env groovy
 /**
  * <h1>SQSD</h1>
  * sqsd : A simple alternative to the Amazon SQS Daemon ("sqsd") used on AWS Beanstalk worker tier instances.
