@@ -40,15 +40,12 @@ if (customConfigFile.exists()) {
 }
 
 // Assert that all required properties are provided.
-assert config.aws.access_key_id != null, "Required `aws.access_key_id` property not provided!!"
-assert config.aws.secret_access_key != null, "Required `aws.secret_access_key` property not provided!!"
 assert config.sqsd.queue.url != null || config.sqsd.queue.name != null, "Required `sqsd.queue.url` OR `sqsd.queue.name` property not provided!!"
 assert config.sqsd.worker.http.host != null, "Required `sqsd.worker.http.host` property not provided!!"
 assert config.sqsd.worker.http.path != null, "Required `sqsd.worker.http.path` property not provided!!"
 
 // Setup sqs client.
-def awsCreds = new BasicAWSCredentials(config.aws.access_key_id as String, config.aws.secret_access_key as String) // TODO: Determine if this is the correct approach when using Docker.
-def sqs = new AmazonSQSClient(awsCreds)
+def sqs = new AmazonSQSClient()
 def sqsRegion = Region.getRegion(Regions.fromName(config.sqsd.queue.region_name as String))
 sqs.setRegion(sqsRegion)
 String sqsQueueUrl = config.sqsd.queue.url ?: sqs.getQueueUrl(config.sqsd.queue.name as String).getQueueUrl() // Use provided queue url or name (url has priority)
