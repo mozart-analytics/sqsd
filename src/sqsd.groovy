@@ -18,6 +18,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.AmazonSQSClient
+import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
@@ -83,8 +84,12 @@ try {
                 String messageReceiptHandle = message.getReceiptHandle()
                 sqs.deleteMessage(new DeleteMessageRequest(sqsQueueUrl, messageReceiptHandle))
             }
-            else // TODO we might validate that the long polling timeout is considerably longer than the visibility timeout, if true then we could skip the exception. Still this is a dangerous alternative.
-                throw new Exception("Local Service Failure. Message ID : " + message.getMessageId()) // We should stop consuming here
+            else {
+                // If unsuccessful, give the message back to the queue for a retry (or a move into a DLQ)
+                println("Giving message back to queue...")
+                String messageReceiptHandle = message.getReceiptHandle()
+                sqs.changeMessageVisibility(new ChangeMessageVisibilityRequest(sqsQueueUrl, messageReceiptHandle, 0))
+            }
         }
 
         println "Done!!"
