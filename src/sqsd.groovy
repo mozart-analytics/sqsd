@@ -62,9 +62,8 @@ try {
 
     // Consume queue until empty
     while(true){ // TODO: Limit the amount of messages to process using a property.
-        println "Querying SQS for messages ..."
         def messages = sqs.receiveMessage(receiveMessageRequest).getMessages()
-        println "Received Messages : " + messages.size()
+        println "Queried SQS, received " + messages.size() + " messages."
 
         // Break when empty if not running daemonized
         if(messages.size() <= 0) {
@@ -91,14 +90,12 @@ try {
                 sqs.changeMessageVisibility(new ChangeMessageVisibilityRequest(sqsQueueUrl, messageReceiptHandle, 0))
             }
         }
-
-        println "Done!!"
     }
 }
 catch (AmazonServiceException ase) { ase.printStackTrace() } // TODO: Add log4j or something similar.
 catch (AmazonClientException ace) { ace.printStackTrace() }
 
-println "SQSD finished successfully!"
+println "SQSD exiting successfully!"
 
 def handleMessage(String httpHost, String httpPath, String contentType, Message message){
     def slurper = new JsonSlurper().setType(JsonParserType.LAX)
