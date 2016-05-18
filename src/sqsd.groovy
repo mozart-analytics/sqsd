@@ -18,6 +18,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.AmazonSQSClient
+import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest
 import com.amazonaws.services.sqs.model.DeleteMessageRequest
 import com.amazonaws.services.sqs.model.Message
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
@@ -40,15 +41,12 @@ if (customConfigFile.exists()) {
 }
 
 // Assert that all required properties are provided.
-assert config.aws.access_key_id != null, "Required `aws.access_key_id` property not provided!!"
-assert config.aws.secret_access_key != null, "Required `aws.secret_access_key` property not provided!!"
 assert config.sqsd.queue.url != null || config.sqsd.queue.name != null, "Required `sqsd.queue.url` OR `sqsd.queue.name` property not provided!!"
 assert config.sqsd.worker.http.host != null, "Required `sqsd.worker.http.host` property not provided!!"
 assert config.sqsd.worker.http.path != null, "Required `sqsd.worker.http.path` property not provided!!"
 
 // Setup sqs client.
-def awsCreds = new BasicAWSCredentials(config.aws.access_key_id as String, config.aws.secret_access_key as String) // TODO: Determine if this is the correct approach when using Docker.
-def sqs = new AmazonSQSClient(awsCreds)
+def sqs = new AmazonSQSClient()
 def sqsRegion = Region.getRegion(Regions.fromName(config.sqsd.queue.region_name as String))
 sqs.setRegion(sqsRegion)
 String sqsQueueUrl = config.sqsd.queue.url ?: sqs.getQueueUrl(config.sqsd.queue.name as String).getQueueUrl() // Use provided queue url or name (url has priority)
@@ -64,9 +62,8 @@ try {
 
     // Consume queue until empty
     while(true){ // TODO: Limit the amount of messages to process using a property.
-        println "Querying SQS for messages ..."
         def messages = sqs.receiveMessage(receiveMessageRequest).getMessages()
-        println "Received Messages : " + messages.size()
+        println "Queried SQS, received " + messages.size() + " messages."
 
         // Break when empty if not running daemonized
         if(messages.size() <= 0) {
@@ -86,17 +83,19 @@ try {
                 String messageReceiptHandle = message.getReceiptHandle()
                 sqs.deleteMessage(new DeleteMessageRequest(sqsQueueUrl, messageReceiptHandle))
             }
-            else // TODO we might validate that the long polling timeout is considerably longer than the visibility timeout, if true then we could skip the exception. Still this is a dangerous alternative.
-                throw new Exception("Local Service Failure. Message ID : " + message.getMessageId()) // We should stop consuming here
+            else {
+                // If unsuccessful, give the message back to the queue for a retry (or a move into a DLQ)
+                println("Giving message back to queue...")
+                String messageReceiptHandle = message.getReceiptHandle()
+                sqs.changeMessageVisibility(new ChangeMessageVisibilityRequest(sqsQueueUrl, messageReceiptHandle, 0))
+            }
         }
-
-        println "Done!!"
     }
 }
 catch (AmazonServiceException ase) { ase.printStackTrace() } // TODO: Add log4j or something similar.
 catch (AmazonClientException ace) { ace.printStackTrace() }
 
-println "SQSD finished successfully!"
+println "SQSD exiting successfully!"
 
 def handleMessage(String httpHost, String httpPath, String contentType, Message message){
     def slurper = new JsonSlurper().setType(JsonParserType.LAX)
