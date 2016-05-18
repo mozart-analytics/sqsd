@@ -10,8 +10,6 @@
 /**
  * AWS SQS  related configuration env-vars
  */
-aws.access_key_id = System.getenv("AWS_ACCESS_KEY_ID")
-aws.secret_access_key = System.getenv("AWS_SECRET_ACCESS_KEY")
 sqsd.queue.name = System.getenv("SQSD_QUEUE_NAME")
 sqsd.queue.url = System.getenv("SQSD_QUEUE_URL")
 sqsd.queue.region_name = System.getenv("SQS_QUEUE_REGION_NAME") ?: "us-east-1"

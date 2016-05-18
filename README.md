@@ -21,12 +21,14 @@ Following are detailed instructions of configuration and usage with and without 
 ## Technologies / Environments Used 
 - Groovy 2.3.7+ 
 - Java JDK 7+ 
-- AWS Java SDK 1.9.6
+- AWS Java SDK 1.11.1
 
 ## Usage 
 
 ### Configuration 
 There are 2 ways to configure the `sqsd`'s properties: Environment Variables or a configuration file. You must set one of the two options.
+
+> *IMPORTANT:* In order for `sqsd` to work, you have to have configured the AWS Authentication Keys on you environment either as ENV VARS or using any of the other methods that AWS provides. For ways to do this, go [here](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html).
 
 #### Using Configuration File 
 Custom properties are loaded from `config/sqsd-config.groovy`.
@@ -36,8 +38,6 @@ Environment Variables and defaults are loaded from `config/sqsd-default-config.g
 
 | **Property**                            | **Default**        | **Required**                       | **Description**                                                                               |
 |-----------------------------------------|--------------------|------------------------------------|-----------------------------------------------------------------------------------------------|
-| `AWS_ACCESS_KEY_ID`                     | -                  | yes                                | Your AWS Access Key.                                                                          |
-| `AWS_SECRET_ACCESS_KEY`                 | -                  | yes                                | Your AWS secret access secret.                                                                |
 | `SQS_QUEUE_REGION_NAME`                 | `us-east-1`        | no                                 | The region name of the AWS SQS queue                                                          |
 | `SQSD_QUEUE_URL`                        | -                  | if `SQSD_QUEUE_NAME` not specified | Your queue URL. You can instead use the queue name but this takes precedence over queue name. |
 | `SQSD_QUEUE_NAME`                       | -                  | if `SQSD_QUEUE_URL` not specified  | Your queue name.                                                                              |

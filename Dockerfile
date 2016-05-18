@@ -9,7 +9,7 @@ RUN mkdir /sqsd
 COPY ./src /sqsd
 
 # Pre-Download sqsd dependencies
-ENV AWS_SDK_VERSION 1.9.6
+ENV AWS_SDK_VERSION 1.11.1
 ENV HTTP_BUILDER_VERSION 0.7.2
 RUN grape install com.amazonaws aws-java-sdk $AWS_SDK_VERSION
 RUN grape install org.codehaus.groovy.modules.http-builder http-builder $HTTP_BUILDER_VERSION

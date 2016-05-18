@@ -2,19 +2,17 @@
  * <h1>SQSD</h1>
  * sqsd : A simple alternative to the Amazon SQS Daemon ("sqsd") used on AWS Beanstalk worker tier instances.
  * <p>
- * Copyright (c) 2014 Mozart Analytics
+ * Copyright (c) 2016 Mozart Analytics
  *
  * @author  <a href="mailto:abdiel.aviles@mozartanalytics.com">Abdiel Aviles</a>
  * @author  <a href="mailto:ortiz.manuel@mozartanalytics.com">Manuel Ortiz</a>
  */
 
-@Grab(group='com.amazonaws', module='aws-java-sdk', version='1.9.6')
+@Grab(group='com.amazonaws', module='aws-java-sdk', version='1.11.1')
 @Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.2')
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.AmazonSQSClient

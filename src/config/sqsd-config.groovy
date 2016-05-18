@@ -4,8 +4,6 @@
  * substitute property value comments with the real values and uncomment.
  **/
 
-//aws.access_key_id = the aws access key id
-//aws.secret_access_key = the aws secret access key
 //sqsd.queue.name = name of the aws sqs queue
 //sqsd.queue.url = url of the aws sqs queue (Required)
 //sqsd.queue.region_name = region name of the aws sqs queue
