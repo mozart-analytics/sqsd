@@ -24,6 +24,7 @@ import groovy.json.JsonParserType
 import groovy.json.JsonSlurper
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+import java.text.SimpleDateFormat
 
 String DEFAULT_CONFIG_FILE_LOCATION = "config/sqsd-default-config.groovy"
 String SQSD_VERSION = "1.0.0"
@@ -57,6 +58,7 @@ try {
             .withQueueUrl(sqsQueueUrl)
             .withMaxNumberOfMessages(config.sqsd.max_messages_per_request as Integer)
             .withWaitTimeSeconds(config.sqsd.wait_time_seconds as Integer) // Sets long-polling wait time seconds (long-polling has to be enabled on related SQS)
+            .withAttributeNames('All')
 
     // Consume queue until empty
     while(true){ // TODO: Limit the amount of messages to process using a property.
@@ -71,6 +73,7 @@ try {
 
         for (Message message : messages) { // TODO: Make async.
             if(handleMessage(
+                    config.queue.name as String,
                     config.sqsd.worker.http.host as String,
                     config.sqsd.worker.http.path as String,
                     config.sqsd.worker.http.request.content_type as String,
@@ -95,16 +98,30 @@ catch (AmazonClientException ace) { ace.printStackTrace() }
 
 println "SQSD exiting successfully!"
 
-def handleMessage(String httpHost, String httpPath, String contentType, Message message){
+def handleMessage(String queueName, String httpHost, String httpPath, String contentType, Message message){
     def slurper = new JsonSlurper().setType(JsonParserType.LAX)
     def payload = slurper.parseText(message.getBody())
+    def headers = [
+        "User-Agent": "aws-sqsd/1.1",
+        "X-Aws-Sqsd-Msgid": message.getMessageId(),
+        "X-Aws-Sqsd-Queue": queueName
+    ]
+    if(message.attributes.SenderId)
+        headers["X-Aws-Sqsd-Sender-Id"] = message.attributes.SenderId
+    if(message.attributes.ApproximateFirstReceiveTimestamp)
+        headers["X-Aws-Sqsd-First-Received-At"] = millis2ISO8601 message.attributes.ApproximateFirstReceiveTimestamp as long
+    if(message.attributes.ApproximateReceiveCount)
+        headers["X-Aws-Sqsd-Receive-Count"] = message.attributes.ApproximateReceiveCount
+    if(message.attributes.SentTimestamp)
+        headers["X-Aws-Sqsd-Sent-Timestamp"] = millis2ISO8601 message.attributes.SentTimestamp as long
 
     int status
     try {
         def resp = new RESTClient(httpHost).post(
                 path : httpPath,
                 body : payload,
-                contentType : contentType
+                contentType : contentType,
+                headers: headers
         )
         status = resp.status
     }
@@ -120,4 +137,10 @@ def handleMessage(String httpHost, String httpPath, String contentType, Message 
     println "POST " + httpHost + httpPath + " :: " + status
 
     status == 200
+}
+
+def millis2ISO8601(long timeInMillis){
+    Date d = new Date(timeInMillis)
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+    sdf.format(d)
 }
